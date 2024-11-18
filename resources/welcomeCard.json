@@ -1,0 +1,48 @@
+{
+  "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+  "type": "AdaptiveCard",
+  "version": "1.0",
+  "body": [
+    {
+      "type": "Image",
+      "url": "https://cloudifyops.com/wp-content/uploads/2020/08/logo.png",
+      "size": "stretch"
+    },
+    {
+      "type": "TextBlock",
+      "spacing": "medium",
+      "size": "default",
+      "weight": "bolder",
+      "text": "Welcome CloudifyOps",
+      "wrap": true,
+      "maxLines": 0,
+      "color": "accent"
+    },
+    {
+      "type": "TextBlock",
+      "size": "default",
+      "isSubtle": true,
+      "text": "Hello and welcome to CloudifyOps! We are here to help you with your cloud journey. Whether you are looking to learn more about Azure, AWS, or GCP, we have you covered. Click on the buttons below to get started.",
+      "wrap": true,
+      "maxLines": 0,
+      "color": "accent"
+    }
+  ],
+  "actions": [
+    {
+      "type": "Action.OpenUrl",
+      "title": "Get an overview",
+      "url": "https://cloudifyops.com",
+      "style": "positive"
+    },
+
+    {
+      "type": "Action.Submit",
+      "title": "Get started"
+    }
+  ],
+  "backgroundImage": {
+    "url": "https://cloudifyops.com/wp-content/uploads/2020/08/background.png",
+    "fillMode": "cover"
+  }
+}

@@ -1,0 +1,265 @@
+{
+    "api-version": "2022-05-15-preview",
+    "stringIndexType": "Utf16CodeUnit",
+    "metadata": {
+        "projectKind": "conversation",
+        "settings": {
+            "confidenceThreshold": 0
+        },
+        "projectName": "JobAssistant",
+        "multilingual": false,
+        "description": "CLU Model for Job-Related Queries",
+        "language": "en-us"
+    },
+    "assets": {
+        "intents": [
+            {
+                "category": "JobSearch"
+            },
+            {
+                "category": "ApplicationStatus"
+            },
+            {
+                "category": "GeneralQueries"
+            },
+            {
+                "category": "None"
+            }
+        ],
+        "entities": [
+            {
+                "category": "JobTitle",
+                "compositionSetting": "returnUnion"
+            },
+            {
+                "category": "Location",
+                "compositionSetting": "returnUnion"
+            },
+            {
+                "category": "Date",
+                "compositionSetting": "returnUnion",
+                "prebuilts": [
+                    {
+                        "category": "DateTime"
+                    }
+                ]
+            },
+            {
+                "category": "ReferenceNumber",
+                "compositionSetting": "returnUnion"
+            },
+            {
+                "category": "CompanyName",
+                "compositionSetting": "returnUnion"
+            }
+        ],
+        "utterances": [
+            {
+                "text": "Are there any software engineer jobs in New York?",
+                "language": "en-us",
+                "intent": "JobSearch",
+                "entities": [
+                    {
+                        "category": "JobTitle",
+                        "offset": 20,
+                        "length": 19
+                    },
+                    {
+                        "category": "Location",
+                        "offset": 44,
+                        "length": 8
+                    }
+                ]
+            },
+            {
+                "text": "Find me data analyst jobs near London",
+                "language": "en-us",
+                "intent": "JobSearch",
+                "entities": [
+                    {
+                        "category": "JobTitle",
+                        "offset": 8,
+                        "length": 12
+                    },
+                    {
+                        "category": "Location",
+                        "offset": 31,
+                        "length": 6
+                    }
+                ]
+            },
+            {
+                "text": "What is the status of my application for job reference #12345?",
+                "language": "en-us",
+                "intent": "ApplicationStatus",
+                "entities": [
+                    {
+                        "category": "ReferenceNumber",
+                        "offset": 50,
+                        "length": 6
+                    }
+                ]
+            },
+            {
+                "text": "Can you check my application status for reference number 67890?",
+                "language": "en-us",
+                "intent": "ApplicationStatus",
+                "entities": [
+                    {
+                        "category": "ReferenceNumber",
+                        "offset": 49,
+                        "length": 5
+                    }
+                ]
+            },
+            {
+                "text": "What companies are hiring marketing managers?",
+                "language": "en-us",
+                "intent": "JobSearch",
+                "entities": [
+                    {
+                        "category": "JobTitle",
+                        "offset": 31,
+                        "length": 18
+                    }
+                ]
+            },
+            {
+                "text": "How do I apply for a job at Google?",
+                "language": "en-us",
+                "intent": "GeneralQueries",
+                "entities": [
+                    {
+                        "category": "CompanyName",
+                        "offset": 26,
+                        "length": 6
+                    }
+                ]
+            },
+            {
+                "text": "Are there any remote jobs available?",
+                "language": "en-us",
+                "intent": "JobSearch",
+                "entities": [
+                    {
+                        "category": "Location",
+                        "offset": 20,
+                        "length": 6
+                    }
+                ]
+            },
+            {
+                "text": "What is the last date to apply for the marketing job at Amazon?",
+                "language": "en-us",
+                "intent": "GeneralQueries",
+                "entities": [
+                    {
+                        "category": "JobTitle",
+                        "offset": 40,
+                        "length": 9
+                    },
+                    {
+                        "category": "CompanyName",
+                        "offset": 54,
+                        "length": 6
+                    }
+                ]
+            },
+            {
+                "text": "I am looking for a job in San Francisco",
+                "language": "en-us",
+                "intent": "JobSearch",
+                "entities": [
+                    {
+                        "category": "Location",
+                        "offset": 27,
+                        "length": 13
+                    }
+                ]
+            },
+            {
+                "text": "Please find job openings for data scientists in Boston",
+                "language": "en-us",
+                "intent": "JobSearch",
+                "entities": [
+                    {
+                        "category": "JobTitle",
+                        "offset": 28,
+                        "length": 14
+                    },
+                    {
+                        "category": "Location",
+                        "offset": 47,
+                        "length": 6
+                    }
+                ]
+            },
+            {
+                "text": "Can you tell me the application deadline for the designer role at Microsoft?",
+                "language": "en-us",
+                "intent": "GeneralQueries",
+                "entities": [
+                    {
+                        "category": "JobTitle",
+                        "offset": 46,
+                        "length": 8
+                    },
+                    {
+                        "category": "CompanyName",
+                        "offset": 59,
+                        "length": 9
+                    }
+                ]
+            },
+            {
+                "text": "When will I receive feedback on my application for job reference 98765?",
+                "language": "en-us",
+                "intent": "ApplicationStatus",
+                "entities": [
+                    {
+                        "category": "ReferenceNumber",
+                        "offset": 56,
+                        "length": 5
+                    }
+                ]
+            },
+            {
+                "text": "Cancel the job application for reference 54321",
+                "language": "en-us",
+                "intent": "ApplicationStatus",
+                "entities": [
+                    {
+                        "category": "ReferenceNumber",
+                        "offset": 39,
+                        "length": 5
+                    }
+                ]
+            },
+            {
+                "text": "How can I update my profile for the software engineer job?",
+                "language": "en-us",
+                "intent": "GeneralQueries",
+                "entities": [
+                    {
+                        "category": "JobTitle",
+                        "offset": 37,
+                        "length": 19
+                    }
+                ]
+            },
+            {
+                "text": "Tell me about jobs in the healthcare sector",
+                "language": "en-us",
+                "intent": "JobSearch",
+                "entities": [
+                    {
+                        "category": "JobTitle",
+                        "offset": 21,
+                        "length": 18
+                    }
+                ]
+            }
+        ]
+    }
+  }
+  
