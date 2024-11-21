@@ -17,7 +17,6 @@ class MainDialog extends ComponentDialog {
         if (!bookingDialog) throw new Error('[MainDialog]: Missing parameter \'bookingDialog\' is required');
 
         // Define the main dialog and its related components.
-        // This is a sample "book a flight" dialog.
         this.addDialog(new TextPrompt('TextPrompt'))
             .addDialog(bookingDialog)
             .addDialog(new WaterfallDialog(MAIN_WATERFALL_DIALOG, [
@@ -30,26 +29,7 @@ class MainDialog extends ComponentDialog {
     }
 
     /**
-     * The run method handles the incoming activity (in the form of a TurnContext) and passes it through the dialog system.
-     * If no dialog is active, it will start the default dialog.
-     * @param {*} turnContext
-     * @param {*} accessor
-     */
-    async run(turnContext, accessor) {
-        const dialogSet = new DialogSet(accessor);
-        dialogSet.add(this);
-
-        const dialogContext = await dialogSet.createContext(turnContext);
-        const results = await dialogContext.continueDialog();
-        if (results.status === DialogTurnStatus.empty) {
-            await dialogContext.beginDialog(this.id);
-        }
-    }
-
-    /**
-     * First step in the waterfall dialog. Prompts the user for a command.
-     * Currently, this expects a booking request, like "book me a flight from Paris to Berlin on march 22"
-     * Note that the sample model will only recognize Paris, Berlin, New York and London as airport cities.
+     * Handles the initial greeting and prompts the user for input.
      */
     async introStep(stepContext) {
         if (!this.cluRecognizer.isConfigured) {
@@ -64,8 +44,7 @@ class MainDialog extends ComponentDialog {
     }
 
     /**
-     * Second step in the waterfall. This will use CLU to attempt to extract the origin, destination and travel dates.
-     * Then, it hands off to the bookingDialog child dialog to collect any remaining details.
+     * Processes the user's intent and entities using CLU and routes to the appropriate child dialog.
      */
     async actStep(stepContext) {
         const bookingDetails = {};
@@ -75,85 +54,77 @@ class MainDialog extends ComponentDialog {
             return await stepContext.beginDialog('bookingDialog', bookingDetails);
         }
 
-        // Call CLU and gather any potential booking details. (Note the TurnContext has the response to the prompt)
+        // Call CLU and gather intent and entity data.
         const cluResult = await this.cluRecognizer.executeCluQuery(stepContext.context);
-        switch (this.cluRecognizer.topIntent(cluResult)) {
-        case 'BookFlight': {
-            // Extract the values for the composite entities from the CLU result.
-            const fromEntities = this.cluRecognizer.getFromEntities(cluResult);
-            const toEntities = this.cluRecognizer.getToEntities(cluResult);
+        const intent = this.cluRecognizer.topIntent(cluResult);
+        switch (intent) {
+            case 'BookFlight':
+            case 'BookBus': {
+                // Extract the entities based on intent.
+                const fromEntities = this.cluRecognizer.getFromEntities(cluResult);
+                const toEntities = this.cluRecognizer.getToEntities(cluResult);
 
-            // Show a warning for Origin and Destination if we can't resolve them.
-            await this.showWarningForUnsupportedCities(stepContext.context, fromEntities, toEntities);
+                // Show warnings for unsupported locations.
+                await this.showWarningForUnsupportedLocations(stepContext.context, fromEntities, toEntities);
 
-            // Initialize BookingDetails with any entities we may have found in the response.
-            bookingDetails.destination = toEntities.airport;
-            bookingDetails.origin = fromEntities.airport;
-            bookingDetails.travelDate = this.cluRecognizer.getTravelDate(cluResult);
-            console.log('CLU extracted these booking details:', JSON.stringify(bookingDetails));
+                // Populate booking details.
+                bookingDetails.bookingType = intent === 'BookFlight' ? 'flight' : 'bus';
+                bookingDetails.destination = toEntities.to || toEntities.station;
+                bookingDetails.origin = fromEntities.from || fromEntities.station;
+                bookingDetails.travelDate = this.cluRecognizer.getTravelDate(cluResult);
+                console.log('CLU extracted these booking details:', JSON.stringify(bookingDetails));
 
-            // Run the BookingDialog passing in whatever details we have from the CLU call, it will fill out the remainder.
-            return await stepContext.beginDialog('bookingDialog', bookingDetails);
-        }
+                // Run the BookingDialog with the extracted details.
+                return await stepContext.beginDialog('bookingDialog', bookingDetails);
+            }
 
-        case 'GetWeather': {
-            // We haven't implemented the GetWeatherDialog so we just display a TODO message.
-            const getWeatherMessageText = 'TODO: get weather flow here';
-            await stepContext.context.sendActivity(getWeatherMessageText, getWeatherMessageText, InputHints.IgnoringInput);
-            break;
-        }
+            case 'Thanks': {
+                const thanksMessageText = 'You’re welcome! Let me know if there’s anything else I can assist you with.';
+                await stepContext.context.sendActivity(thanksMessageText, thanksMessageText, InputHints.IgnoringInput);
+                break;
+            }
 
-        default: {
-            // Catch all for unhandled intents
-            const didntUnderstandMessageText = `Sorry, I didn't get that. Please try asking in a different way (intent was ${ this.cluRecognizer.topIntent(cluResult) })`;
-            await stepContext.context.sendActivity(didntUnderstandMessageText, didntUnderstandMessageText, InputHints.IgnoringInput);
-        }
+            default: {
+                // Handle unrecognized intents.
+                const didntUnderstandMessageText = `Sorry, I didn't get that. Please try asking in a different way (intent was ${intent}).`;
+                await stepContext.context.sendActivity(didntUnderstandMessageText, didntUnderstandMessageText, InputHints.IgnoringInput);
+            }
         }
 
         return await stepContext.next();
     }
 
     /**
-     * Shows a warning if the requested From or To cities are recognized as entities but they are not in the Airport entity list.
-     * In some cases CLU will recognize the From and To composite entities as a valid cities but the From and To Airport values
-     * will be empty if those entity values can't be mapped to a canonical item in the Airport.
+     * Shows a warning if the requested From or To locations are recognized but not supported.
      */
-    async showWarningForUnsupportedCities(context, fromEntities, toEntities) {
-        const unsupportedCities = [];
-        if (fromEntities.from && !fromEntities.airport) {
-            unsupportedCities.push(fromEntities.from);
+    async showWarningForUnsupportedLocations(context, fromEntities, toEntities) {
+        const unsupportedLocations = [];
+        if (fromEntities.from && !fromEntities.station && !fromEntities.airport) {
+            unsupportedLocations.push(fromEntities.from);
         }
 
-        if (toEntities.to && !toEntities.airport) {
-            unsupportedCities.push(toEntities.to);
+        if (toEntities.to && !toEntities.station && !toEntities.airport) {
+            unsupportedLocations.push(toEntities.to);
         }
 
-        if (unsupportedCities.length) {
-            const messageText = `Sorry but the following airports are not supported: ${ unsupportedCities.join(', ') }`;
+        if (unsupportedLocations.length) {
+            const messageText = `Sorry, but the following locations are not supported: ${unsupportedLocations.join(', ')}`;
             await context.sendActivity(messageText, messageText, InputHints.IgnoringInput);
         }
     }
 
     /**
-     * This is the final step in the main waterfall dialog.
-     * It wraps up the sample "book a flight" interaction with a simple confirmation.
+     * Wraps up the interaction and restarts the dialog for further assistance.
      */
     async finalStep(stepContext) {
-        // If the child dialog ("bookingDialog") was cancelled or the user failed to confirm, the Result here will be null.
         if (stepContext.result) {
             const result = stepContext.result;
-            // Now we have all the booking details.
-
-            // This is where calls to the booking AOU service or database would go.
-
-            // If the call to the booking service was successful tell the user.
             const timeProperty = new TimexProperty(result.travelDate);
             const travelDateMsg = timeProperty.toNaturalLanguage(new Date(Date.now()));
-            const msg = `I have you booked to ${ result.destination } from ${ result.origin } on ${ travelDateMsg }.`;
+            const msg = `I have you booked for a ${result.bookingType} to ${result.destination} from ${result.origin} on ${travelDateMsg}.`;
             await stepContext.context.sendActivity(msg, msg, InputHints.IgnoringInput);
         }
 
-        // Restart the main dialog with a different message the second time around
         return await stepContext.replaceDialog(this.initialDialogId, { restartMsg: 'What else can I do for you?' });
     }
 }

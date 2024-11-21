@@ -3,7 +3,7 @@
 
 const { CluRecognizer } = require('../clu/cluRecognizer');
 
-class FlightBookingRecognizer {
+class BookingWebsiteRecognizer {
     constructor(config) {
         const cluIsConfigured = config && config.endpointKey && config.endpoint && config.projectName && config.deploymentName;
         if (cluIsConfigured) {
@@ -28,7 +28,7 @@ class FlightBookingRecognizer {
         let fromValue;
 
         for (const entity of result.entities) {
-            if (entity.category === 'fromCity') {
+            if (entity.category === 'fromLocation') { // Updated entity name
                 fromValue = entity.text;
             }
         }
@@ -43,7 +43,7 @@ class FlightBookingRecognizer {
         let toValue;
 
         for (const entity of result.entities) {
-            if (entity.category === 'toCity') {
+            if (entity.category === 'toLocation') { // Updated entity name
                 toValue = entity.text;
             }
         }
@@ -62,7 +62,7 @@ class FlightBookingRecognizer {
         let datetimeEntity;
 
         for (const entity of result.entities) {
-            if (entity.category === 'flightDate') {
+            if (entity.category === 'travelDate') { // Updated entity name
                 datetimeEntity = entity.resolutions;
             }
         }
@@ -80,4 +80,4 @@ class FlightBookingRecognizer {
     }
 }
 
-module.exports.FlightBookingRecognizer = FlightBookingRecognizer;
+module.exports.BookingWebsiteRecognizer = BookingWebsiteRecognizer;

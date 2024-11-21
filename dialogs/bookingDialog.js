@@ -20,6 +20,7 @@ class BookingDialog extends CancelAndHelpDialog {
             .addDialog(new ConfirmPrompt(CONFIRM_PROMPT))
             .addDialog(new DateResolverDialog(DATE_RESOLVER_DIALOG))
             .addDialog(new WaterfallDialog(WATERFALL_DIALOG, [
+                this.bookingTypeStep.bind(this),
                 this.destinationStep.bind(this),
                 this.originStep.bind(this),
                 this.travelDateStep.bind(this),
@@ -31,13 +32,28 @@ class BookingDialog extends CancelAndHelpDialog {
     }
 
     /**
-     * If a destination city has not been provided, prompt for one.
+     * Prompt for the type of booking (bus or flight).
+     */
+    async bookingTypeStep(stepContext) {
+        const bookingDetails = stepContext.options;
+
+        if (!bookingDetails.bookingType) {
+            const messageText = 'Are you booking a bus or a flight?';
+            const msg = MessageFactory.text(messageText, messageText, InputHints.ExpectingInput);
+            return await stepContext.prompt(TEXT_PROMPT, { prompt: msg });
+        }
+        return await stepContext.next(bookingDetails.bookingType);
+    }
+
+    /**
+     * If a destination has not been provided, prompt for one.
      */
     async destinationStep(stepContext) {
         const bookingDetails = stepContext.options;
 
+        bookingDetails.bookingType = stepContext.result;
         if (!bookingDetails.destination) {
-            const messageText = 'To what city would you like to travel?';
+            const messageText = `To what ${bookingDetails.bookingType === 'bus' ? 'station' : 'city'} would you like to travel?`;
             const msg = MessageFactory.text(messageText, messageText, InputHints.ExpectingInput);
             return await stepContext.prompt(TEXT_PROMPT, { prompt: msg });
         }
@@ -45,29 +61,26 @@ class BookingDialog extends CancelAndHelpDialog {
     }
 
     /**
-     * If an origin city has not been provided, prompt for one.
+     * If an origin has not been provided, prompt for one.
      */
     async originStep(stepContext) {
         const bookingDetails = stepContext.options;
 
-        // Capture the response to the previous step's prompt
         bookingDetails.destination = stepContext.result;
         if (!bookingDetails.origin) {
-            const messageText = 'From what city will you be travelling?';
-            const msg = MessageFactory.text(messageText, 'From what city will you be travelling?', InputHints.ExpectingInput);
+            const messageText = `From what ${bookingDetails.bookingType === 'bus' ? 'station' : 'city'} will you be travelling?`;
+            const msg = MessageFactory.text(messageText, messageText, InputHints.ExpectingInput);
             return await stepContext.prompt(TEXT_PROMPT, { prompt: msg });
         }
         return await stepContext.next(bookingDetails.origin);
     }
 
     /**
-     * If a travel date has not been provided, prompt for one.
-     * This will use the DATE_RESOLVER_DIALOG.
+     * If a travel date has not been provided, prompt for one using DATE_RESOLVER_DIALOG.
      */
     async travelDateStep(stepContext) {
         const bookingDetails = stepContext.options;
 
-        // Capture the results of the previous step
         bookingDetails.origin = stepContext.result;
         if (!bookingDetails.travelDate || this.isAmbiguous(bookingDetails.travelDate)) {
             return await stepContext.beginDialog(DATE_RESOLVER_DIALOG, { date: bookingDetails.travelDate });
@@ -81,12 +94,10 @@ class BookingDialog extends CancelAndHelpDialog {
     async confirmStep(stepContext) {
         const bookingDetails = stepContext.options;
 
-        // Capture the results of the previous step
         bookingDetails.travelDate = stepContext.result;
-        const messageText = `Please confirm, I have you traveling to: ${ bookingDetails.destination } from: ${ bookingDetails.origin } on: ${ bookingDetails.travelDate }. Is this correct?`;
+        const messageText = `Please confirm, I have you traveling by ${bookingDetails.bookingType} to: ${bookingDetails.destination} from: ${bookingDetails.origin} on: ${bookingDetails.travelDate}. Is this correct?`;
         const msg = MessageFactory.text(messageText, messageText, InputHints.ExpectingInput);
 
-        // Offer a YES/NO prompt.
         return await stepContext.prompt(CONFIRM_PROMPT, { prompt: msg });
     }
 
@@ -102,8 +113,8 @@ class BookingDialog extends CancelAndHelpDialog {
     }
 
     isAmbiguous(timex) {
-        const timexPropery = new TimexProperty(timex);
-        return !timexPropery.types.has('definite');
+        const timexProperty = new TimexProperty(timex);
+        return !timexProperty.types.has('definite');
     }
 }
 
